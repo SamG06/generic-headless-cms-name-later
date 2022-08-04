@@ -1,40 +1,25 @@
 package setupDB
 
 import (
-	"database/sql"
 	"fmt"
 
-	env "github.com/SamG06/generic-headless-cms-name-later/env_variables"
+	database "github.com/SamG06/generic-headless-cms-name-later/database"
 	_ "github.com/lib/pq"
 )
 
 func SetupDatabase(){
-	config := env.ProjectEnvs()
-
-	psqlAuth := fmt.Sprintf("host=%s port=%s user=%s " + 
-	"password=%s dbname=%s", config.Host, config.Port,
-	 config.DBuser, config.Password, config.DBname)
+	db := database.Connection()
 	
-	 db, err := sql.Open("postgres", psqlAuth)
+	tableQueries := TablesSetup()
 
-	 defer db.Close()
+	for i := 0; i < len(tableQueries); i++ {
 
-	 err = db.Ping()
-	 if err != nil {
-	   panic(err)
-	 }
-   
-	 fmt.Println("Successfully connected!")
-
-	 tableQueries := TablesSetup()
-
-	 for i := 0; i < len(tableQueries); i++ {
-		res, err := db.Exec(tableQueries[i])
+		_, err := db.Exec(tableQueries[i])
 
 		if err != nil {
 			panic(err)
 		}
 
-		fmt.Println(res)
-	 }
+		fmt.Println("Created table with query:", tableQueries[i])
+	}
 }
